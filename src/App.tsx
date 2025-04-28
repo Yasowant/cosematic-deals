@@ -9,6 +9,7 @@ import Deals from './pages/Deals';
 import Makeup from './pages/Makeup';
 import Skincare from './pages/Skincare';
 import Haircare from './pages/Haircare';
+import NewArrivals from './pages/NewArrivals';
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/category/makeup" element={<Makeup />} />
           <Route path="/category/skincare" element={<Skincare />} />
           <Route path="/category/haircare" element={<Haircare />} />
+          <Route path="/new-arrivals" element={<NewArrivals />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
