@@ -10,26 +10,34 @@ import Makeup from './pages/Makeup';
 import Skincare from './pages/Skincare';
 import Haircare from './pages/Haircare';
 import NewArrivals from './pages/NewArrivals';
+import Login from './pages/Login';
+import { AuthProvider } from './contexts/AuthContext';
+import Register from './pages/Register';
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/deals" element={<Deals />} />
-          <Route path="/category/makeup" element={<Makeup />} />
-          <Route path="/category/skincare" element={<Skincare />} />
-          <Route path="/category/haircare" element={<Haircare />} />
-          <Route path="/new-arrivals" element={<NewArrivals />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/deals" element={<Deals />} />
+            <Route path="/category/makeup" element={<Makeup />} />
+            <Route path="/category/skincare" element={<Skincare />} />
+            <Route path="/category/haircare" element={<Haircare />} />
+            <Route path="/new-arrivals" element={<NewArrivals />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
