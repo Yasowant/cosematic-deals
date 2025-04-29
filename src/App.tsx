@@ -13,6 +13,7 @@ import NewArrivals from './pages/NewArrivals';
 import Login from './pages/Login';
 import { AuthProvider } from './contexts/AuthContext';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/new-arrivals" element={<NewArrivals />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>

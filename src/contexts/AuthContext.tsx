@@ -1,93 +1,192 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
+import { auth, googleProvider, facebookProvider } from '@/lib/firebase';
+import {
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  signOut,
+  User as FirebaseUser,
+  AuthProvider as FirebaseAuthProvider,
+  updateProfile,
+  sendPasswordResetEmail,
+} from 'firebase/auth';
 
-// Define types for our user and context
+// Define local User model with additional fields if needed
 type User = {
   id: string;
   email: string;
   name?: string;
+  provider?: string;
+  photoUrl?: string;
+  emailVerified?: boolean;
 };
 
+// Define context shape
 type AuthContextType = {
   user: User | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
-  logout: () => void;
+  register: (email: string, password: string, name?: string) => Promise<void>;
+  logout: () => Promise<void>;
+  loginWithSocial: (provider: 'google' | 'facebook') => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
 };
 
-// Create context with default values
+// Create context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+// Extract user info from FirebaseUser
+const mapFirebaseUser = (fbUser: FirebaseUser): User => ({
+  id: fbUser.uid,
+  email: fbUser.email || '',
+  name: fbUser.displayName || undefined,
+  provider: fbUser.providerData[0]?.providerId,
+  photoUrl: fbUser.photoURL || undefined,
+  emailVerified: fbUser.emailVerified,
+});
+
+// Provider component
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Check if user is already logged in (from localStorage)
+  // Observe auth state
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
+      if (fbUser) {
+        const mappedUser = mapFirebaseUser(fbUser);
+        setUser(mappedUser);
+        localStorage.setItem('user', JSON.stringify(mappedUser));
+      } else {
+        setUser(null);
+        localStorage.removeItem('user');
+      }
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
+  // Email/password login
   const login = async (email: string, password: string) => {
-    // This is a simplified mock login
-    // In a real app, this would call an API
     setIsLoading(true);
     try {
-      // Mock authentication delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // For demo purposes, we're just checking if the password is not empty
-      if (!password) {
-        throw new Error('Invalid credentials');
-      }
-
-      const newUser = { id: `user-${Date.now()}`, email };
-      setUser(newUser);
-      localStorage.setItem('user', JSON.stringify(newUser));
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      const mappedUser = mapFirebaseUser(result.user);
+      setUser(mappedUser);
+      localStorage.setItem('user', JSON.stringify(mappedUser));
+    } catch (error) {
+      console.error('Login Error:', error.message);
+      throw error; // Propagate error for UI handling
     } finally {
       setIsLoading(false);
     }
   };
 
-  const register = async (email: string, password: string, name: string) => {
-    // This is a simplified mock registration
+  // Email/password registration
+  const register = async (email: string, password: string, name?: string) => {
     setIsLoading(true);
     try {
-      // Mock registration delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const result = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
 
-      if (!email || !password) {
-        throw new Error('Email and password are required');
+      if (name && result.user) {
+        await updateProfile(result.user, { displayName: name });
       }
 
-      const newUser = { id: `user-${Date.now()}`, email, name };
-      setUser(newUser);
-      localStorage.setItem('user', JSON.stringify(newUser));
+      const mappedUser = mapFirebaseUser(result.user);
+      setUser(mappedUser);
+      localStorage.setItem('user', JSON.stringify(mappedUser));
+    } catch (error) {
+      console.error('Registration Error:', error.message);
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = () => {
+  const resetPassword = async (email: string): Promise<void> => {
+    setIsLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, email);
+      console.log('Password reset email sent.');
+    } catch (error) {
+      console.error('Reset Password Error:', error.message);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Social login
+  const loginWithSocial = async (provider: 'google' | 'facebook') => {
+    setIsLoading(true);
+    try {
+      let authProvider: FirebaseAuthProvider;
+
+      switch (provider) {
+        case 'google':
+          authProvider = googleProvider;
+          break;
+        case 'facebook':
+          authProvider = facebookProvider;
+          break;
+        default:
+          throw new Error('Unsupported provider');
+      }
+
+      const result = await signInWithPopup(auth, authProvider);
+      const mappedUser = mapFirebaseUser(result.user);
+      setUser(mappedUser);
+      localStorage.setItem('user', JSON.stringify(mappedUser));
+    } catch (error) {
+      console.error('Social login error:', error.message);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Logout
+  const logout = async () => {
+    await signOut(auth);
     setUser(null);
     localStorage.removeItem('user');
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoading,
+        login,
+        register,
+        logout,
+        loginWithSocial,
+        resetPassword,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => {
+// Hook for using auth context
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;

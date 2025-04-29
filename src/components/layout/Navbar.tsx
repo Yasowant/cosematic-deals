@@ -90,9 +90,22 @@ const Navbar = () => {
 
             {user ? (
               <div className="flex items-center">
-                <span className="hidden md:inline-block mr-2 text-sm">
-                  Hi, {user.name || user.email.split('@')[0]}
-                </span>
+                {/* Profile Image and Greeting */}
+                <div className="flex items-center mr-2">
+                  {user?.photoUrl ? (
+                    <img
+                      src={user.photoUrl} // Assuming user object has a profileImage field
+                      alt="Profile"
+                      className="h-8 w-8 rounded-full object-cover mr-2"
+                    />
+                  ) : (
+                    <User className="h-8 w-8 text-gray-500 mr-2" />
+                  )}
+                  <span className="hidden md:inline-block text-sm">
+                    Hi, {user.name || user.email.split('@')[0]}
+                  </span>
+                </div>
+
                 <Button
                   variant="ghost"
                   size="icon"
