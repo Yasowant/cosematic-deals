@@ -89,7 +89,7 @@ export const products: Product[] = [
     description: 'Removes makeup and impurities without stripping',
     price: 28.5,
     image:
-      'https://images.unsplash.com/photo-1570554520913-ce2192a7d6de?w=800&auto=format&fit=crop&q=60',
+      'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=800&auto=format&fit=crop&q=60',
     rating: 4.9,
   },
   {
@@ -125,7 +125,7 @@ export const products: Product[] = [
     description: 'Ultra-fine tip for precise application',
     price: 16.5,
     image:
-      'https://images.unsplash.com/photo-1631730356798-875ca4128c8c?w=800&auto=format&fit=crop&q=60',
+      'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=800&auto=format&fit=crop&q=60',
     rating: 4.3,
   },
 ];
